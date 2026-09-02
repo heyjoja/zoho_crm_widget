@@ -52,4 +52,10 @@ export default {
         hot: true,
         historyApiFallback: true,
     },
+    ignoreWarnings: [
+        {
+            module: /maplibre-gl[\\/]dist[\\/]maplibre-gl\.mjs/,
+            message: /Critical dependency: the request of a dependency is an expression/,
+        },
+    ]
 }

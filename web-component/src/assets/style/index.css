@@ -1,0 +1,117 @@
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --qualicare-blue: #0a4f7c;
+  --qualicare-blue-medium: #1b5187;
+  --qualicare-blue-dark: #003768;
+  --qualicare-blue-bright: #109cde;
+  --qualicare-gold: #b99850;
+  --qualicare-gold-dark: #8c7032;
+  --qualicare-blue-gray: #d5dde7;
+  --qualicare-olive: #d1de82;
+  --color-background: #f4f7fa;
+  --color-surface: #ffffff;
+  --color-text: #212529;
+  --color-text-muted: #666666;
+  --color-border: #d5dde7;
+  --color-primary: var(--qualicare-blue);
+  --color-primary-dark: var(--qualicare-blue-dark);
+  --color-accent: var(--qualicare-gold);
+  --focus-ring: rgba(10, 79, 124, 0.22);
+
+  font-family: var(--font-sans);
+  color: var(--color-text);
+  background: var(--color-background);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  min-height: 100%;
+  background: var(--color-background);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  color: var(--color-text);
+  background:
+          radial-gradient(circle at 8% 0%, rgba(10, 79, 124, 0.11), transparent 29rem),
+          radial-gradient(circle at 94% 14%, rgba(185, 152, 80, 0.1), transparent 25rem),
+          var(--color-background);
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: var(--font-sans);
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+table {
+  border-spacing: 0;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  color: #212529;
+  background: rgba(185, 152, 80, 0.28);
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

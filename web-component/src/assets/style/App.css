@@ -1,0 +1,77 @@
+#root {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#root::before,
+#root::after {
+  position: fixed;
+  z-index: -1;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  content: '';
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+#root::before {
+  top: -190px;
+  left: -110px;
+  background: rgba(10, 79, 124, 0.15);
+}
+
+#root::after {
+  right: -160px;
+  bottom: -210px;
+  background: rgba(185, 152, 80, 0.13);
+}
+
+.contacts {
+  position: relative;
+  z-index: 1;
+  animation: contacts-enter 360ms ease-out both;
+}
+
+.contacts__header,
+.contacts__panel {
+  width: 100%;
+}
+
+.contacts__panel {
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.contacts__table tbody tr:focus-within {
+  background: #f1f6fa;
+}
+
+.contacts__create-button,
+.contacts__details-button {
+  user-select: none;
+}
+
+@keyframes contacts-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 620px) {
+  #root::before,
+  #root::after {
+    width: 240px;
+    height: 240px;
+    filter: blur(70px);
+  }
+}

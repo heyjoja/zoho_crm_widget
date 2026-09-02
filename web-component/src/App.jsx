@@ -1,5 +1,5 @@
-function App() {
-  return <h1>Apps contacts configurated</h1>
-}
+import Contact from './components/Contact'
 
-export default App
+export default function App() {
+  return <Contact />
+}
