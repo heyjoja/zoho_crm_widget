@@ -1,0 +1,25 @@
+const en = {
+  contacts: 'Contacts',
+  addContact: 'Add contact',
+  searchContact: 'Search contact...',
+  firstName: 'First name',
+  lastName: 'Last name',
+  phone: 'Phone',
+  email: 'Email',
+  location: 'Location',
+  action: 'Action',
+  select: 'Select',
+  selectAll: 'Select all contacts',
+  actions: 'Actions',
+  goToRecord: 'Go to module record',
+  delete: 'Delete',
+  showing: 'Showing 1 to 10 of 97 entries',
+  previous: 'Previous',
+  next: 'Next',
+  deleteContact: 'Delete contact',
+  deleteConfirm: 'Are you sure you want to delete',
+  deleteWarning: 'This action cannot be undone.',
+  cancel: 'Cancel',
+}
+
+export default en

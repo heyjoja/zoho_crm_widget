@@ -1,0 +1,25 @@
+const fr = {
+    contacts: 'Contacts',
+    addContact: 'Ajouter un contact',
+    searchContact: 'Rechercher un contact...',
+    selectAll: 'Sélectionner tous les contacts',
+    select: 'Sélectionner',
+    firstName: 'Prénom',
+    lastName: 'Nom de famille',
+    phone: 'Téléphone',
+    email: 'Courriel',
+    location: 'Emplacement',
+    action: 'Action',
+    actions: 'Actions pour',
+    goToRecord: 'Aller à l\'enregistrement du module',
+    delete: 'Supprimer',
+    showing: 'Affichage de 1 à 10 sur 97 entrées',
+    previous: 'Précédent',
+    next: 'Suivant',
+    deleteContact: 'Supprimer le contact',
+    deleteConfirm: 'Êtes-vous sûr de vouloir supprimer',
+    deleteWarning: 'Cette action est irréversible.',
+    cancel: 'Annuler',
+}
+
+export default fr

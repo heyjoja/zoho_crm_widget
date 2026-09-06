@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import DetailContact from './DetailContact.jsx'
+import LanguagePicker from './LanguagePicker.jsx'
+import { useLanguage } from '../language/LanguageContext.jsx'
 
 const initialContacts = [
     { id: '001', firstName: 'Roger', lastName: 'Kinnaird', phone: '+1 416 555 0134', email: 'roger.kinnaird@example.com', streetAddress: '123 King St W', postalCode: 'M5H 1J9', city: 'Toronto', provinceState: 'Ontario', country: 'Canada', countryCode: 'CA', location: '123 King St W, Toronto, Ontario, M5H 1J9, Canada' },
@@ -18,7 +20,8 @@ const getInitials = ({ firstName, lastName }) => (
     `${firstName.charAt(0)}${lastName.charAt(0)}`
 )
 
-export default function Contacts({ onGoToModuleRecord }) {
+export default function Contact({ onGoToModuleRecord }) {
+    const { t } = useLanguage()
     const [contactList, setContactList] = useState(initialContacts)
     const [selectedContactId, setSelectedContactId] = useState(null)
     const [openActionsId, setOpenActionsId] = useState(null)
@@ -33,12 +36,10 @@ export default function Contacts({ onGoToModuleRecord }) {
 
     const goToModuleRecord = (contact) => {
         setOpenActionsId(null)
-
         if (typeof onGoToModuleRecord === 'function') {
             onGoToModuleRecord(contact)
             return
         }
-
         setSelectedContactId(contact.id)
     }
 
@@ -49,7 +50,6 @@ export default function Contacts({ onGoToModuleRecord }) {
 
     const confirmContactDeletion = () => {
         if (!contactPendingDeletion) return
-
         setContactList((currentContacts) => currentContacts.filter((contact) => (
             contact.id !== contactPendingDeletion.id
         )))
@@ -63,13 +63,14 @@ export default function Contacts({ onGoToModuleRecord }) {
         <main className="contacts">
             <header className="contacts__page-header">
                 <div>
-                    <h1>Contacts</h1>
+                    <h1>{t.contacts ?? 'Contacts'}</h1>
                 </div>
 
                 <div className="contacts__header-actions">
+                    <LanguagePicker />
                     <button className="contacts__button contacts__button--primary" type="button">
                         <span aria-hidden="true">＋</span>
-                        Add contact
+                        {t.addContact ?? 'Add contact'}
                     </button>
                 </div>
             </header>
@@ -78,7 +79,11 @@ export default function Contacts({ onGoToModuleRecord }) {
                 <div className="contacts__toolbar">
                     <label className="contacts__search">
                         <span aria-hidden="true">⌕</span>
-                        <input type="search" placeholder="Search contact..." aria-label="Search contacts" />
+                        <input
+                            type="search"
+                            placeholder={t.searchContact ?? 'Search contact...'}
+                            aria-label={t.searchContact ?? 'Search contacts'}
+                        />
                     </label>
                 </div>
 
@@ -89,14 +94,14 @@ export default function Contacts({ onGoToModuleRecord }) {
                                 <thead>
                                 <tr>
                                     <th className="contacts__check-cell">
-                                        <input type="checkbox" aria-label="Select all contacts" />
+                                        <input type="checkbox" aria-label={t.selectAll ?? 'Select all contacts'} />
                                     </th>
-                                    <th>First name</th>
-                                    <th>Last name</th>
-                                    <th>Phone</th>
-                                    <th>Email</th>
-                                    <th>Location</th>
-                                    <th className="contacts__action-heading">Action</th>
+                                    <th>{t.firstName ?? 'First name'}</th>
+                                    <th>{t.lastName ?? 'Last name'}</th>
+                                    <th>{t.phone ?? 'Phone'}</th>
+                                    <th>{t.email ?? 'Email'}</th>
+                                    <th>{t.location ?? 'Location'}</th>
+                                    <th className="contacts__action-heading">{t.action ?? 'Action'}</th>
                                 </tr>
                                 </thead>
 
@@ -107,37 +112,37 @@ export default function Contacts({ onGoToModuleRecord }) {
                                         key={contact.id}
                                     >
                                         <td className="contacts__check-cell">
-                                            <input type="checkbox" aria-label={`Select ${contact.firstName} ${contact.lastName}`} />
+                                            <input type="checkbox" aria-label={`${t.select ?? 'Select'} ${contact.firstName} ${contact.lastName}`} />
                                         </td>
-                                        <td data-label="First name">
+                                        <td data-label={t.firstName ?? 'First name'}>
                                             <div className="contacts__person">
-                          <span className={`contacts__avatar contacts__avatar--${(index % 5) + 1}`}>
-                            {getInitials(contact)}
-                          </span>
+                                                <span className={`contacts__avatar contacts__avatar--${(index % 5) + 1}`}>
+                                                    {getInitials(contact)}
+                                                </span>
                                                 <span className="contacts__person-copy">
-                            <button
-                                className="contacts__name-button"
-                                type="button"
-                                aria-pressed={selectedContact?.id === contact.id}
-                                onClick={() => {
-                                    setOpenActionsId(null)
-                                    setSelectedContactId(contact.id)
-                                }}
-                            >
-                              {contact.firstName}
-                            </button>
-                            <small>Contact #{contact.id}</small>
-                          </span>
+                                                    <button
+                                                        className="contacts__name-button"
+                                                        type="button"
+                                                        aria-pressed={selectedContact?.id === contact.id}
+                                                        onClick={() => {
+                                                            setOpenActionsId(null)
+                                                            setSelectedContactId(contact.id)
+                                                        }}
+                                                    >
+                                                        {contact.firstName}
+                                                    </button>
+                                                    <small>Contact #{contact.id}</small>
+                                                </span>
                                             </div>
                                         </td>
-                                        <td data-label="Last name">{contact.lastName}</td>
-                                        <td data-label="Phone">{contact.phone}</td>
-                                        <td data-label="Email"><span className="contacts__muted">{contact.email}</span></td>
-                                        <td data-label="Location"><span className="contacts__muted">{contact.location}</span></td>
+                                        <td data-label={t.lastName ?? 'Last name'}>{contact.lastName}</td>
+                                        <td data-label={t.phone ?? 'Phone'}>{contact.phone}</td>
+                                        <td data-label={t.email ?? 'Email'}><span className="contacts__muted">{contact.email}</span></td>
+                                        <td data-label={t.location ?? 'Location'}><span className="contacts__muted">{contact.location}</span></td>
                                         <td className="contacts__row-action">
                                             <button
                                                 type="button"
-                                                aria-label={`Actions for ${contact.firstName} ${contact.lastName}`}
+                                                aria-label={`${t.actions ?? 'Actions'} ${contact.firstName} ${contact.lastName}`}
                                                 aria-expanded={openActionsId === contact.id}
                                                 aria-haspopup="menu"
                                                 onClick={() => setOpenActionsId((currentId) => (
@@ -150,7 +155,7 @@ export default function Contacts({ onGoToModuleRecord }) {
                                                 <div className="contacts__action-menu" role="menu">
                                                     <button type="button" role="menuitem" onClick={() => goToModuleRecord(contact)}>
                                                         <span aria-hidden="true">↗</span>
-                                                        Go to module record
+                                                        {t.goToRecord ?? 'Go to module record'}
                                                     </button>
                                                     <button
                                                         className="contacts__action-menu-delete"
@@ -159,7 +164,7 @@ export default function Contacts({ onGoToModuleRecord }) {
                                                         onClick={() => requestContactDeletion(contact)}
                                                     >
                                                         <span aria-hidden="true">⌫</span>
-                                                        Delete
+                                                        {t.delete ?? 'Delete'}
                                                     </button>
                                                 </div>
                                             )}
@@ -171,14 +176,14 @@ export default function Contacts({ onGoToModuleRecord }) {
                         </div>
 
                         <footer className="contacts__pagination">
-                            <p>Showing 1 to 10 of 97 entries</p>
+                            <p>{t.showing ?? 'Showing 1 to 10 of 97 entries'}</p>
                             <div className="contacts__pages">
-                                <button type="button">← Previous</button>
+                                <button type="button">← {t.previous ?? 'Previous'}</button>
                                 <button type="button">1</button>
                                 <button className="contacts__page--active" type="button">2</button>
                                 <span>...</span>
                                 <button type="button">9</button>
-                                <button className="contacts__next" type="button">Next →</button>
+                                <button className="contacts__next" type="button">{t.next ?? 'Next'} →</button>
                             </div>
                         </footer>
                     </div>
@@ -201,10 +206,12 @@ export default function Contacts({ onGoToModuleRecord }) {
                         aria-describedby="delete-contact-description"
                     >
                         <span className="contacts__confirm-icon" aria-hidden="true">!</span>
-                        <h2 id="delete-contact-title">Delete contact?</h2>
+                        <h2 id="delete-contact-title">{t.deleteContact ?? 'Delete contact?'}</h2>
                         <p id="delete-contact-description">
-                            Are you sure you want to delete {contactPendingDeletion.firstName}{' '}
-                            {contactPendingDeletion.lastName}? This action cannot be undone.
+                            {t.deleteConfirm ?? 'Are you sure you want to delete'}{' '}
+                            {contactPendingDeletion.firstName}{' '}
+                            {contactPendingDeletion.lastName}?{' '}
+                            {t.deleteWarning ?? 'This action cannot be undone.'}
                         </p>
                         <div className="contacts__confirm-actions">
                             <button
@@ -213,14 +220,14 @@ export default function Contacts({ onGoToModuleRecord }) {
                                 type="button"
                                 onClick={() => setContactPendingDeletion(null)}
                             >
-                                Cancel
+                                {t.cancel ?? 'Cancel'}
                             </button>
                             <button
                                 className="contacts__confirm-delete"
                                 type="button"
                                 onClick={confirmContactDeletion}
                             >
-                                Delete contact
+                                {t.deleteContact ?? 'Delete contact'}
                             </button>
                         </div>
                     </section>

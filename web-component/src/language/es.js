@@ -1,0 +1,25 @@
+const es = {
+    contacts: 'Contactos',
+    addContact: 'Agregar contacto',
+    searchContact: 'Buscar contacto...',
+    selectAll: 'Seleccionar todos los contactos',
+    select: 'Seleccionar',
+    firstName: 'Nombre',
+    lastName: 'Apellido',
+    phone: 'Teléfono',
+    email: 'Correo electrónico',
+    location: 'Ubicación',
+    action: 'Acción',
+    actions: 'Acciones para',
+    goToRecord: 'Ir al registro del módulo',
+    delete: 'Eliminar',
+    showing: 'Mostrando 1 a 10 de 97 entradas',
+    previous: 'Anterior',
+    next: 'Siguiente',
+    deleteContact: 'Eliminar contacto',
+    deleteConfirm: '¿Estás seguro de que deseas eliminar',
+    deleteWarning: 'Esta acción no se puede deshacer.',
+    cancel: 'Cancelar',
+}
+
+export default es
