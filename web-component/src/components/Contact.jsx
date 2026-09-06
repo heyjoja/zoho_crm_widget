@@ -18,15 +18,45 @@ const getInitials = ({ firstName, lastName }) => (
     `${firstName.charAt(0)}${lastName.charAt(0)}`
 )
 
-export default function Contacts() {
+export default function Contacts({ onGoToModuleRecord }) {
     const [contactList, setContactList] = useState(initialContacts)
     const [selectedContactId, setSelectedContactId] = useState(null)
+    const [openActionsId, setOpenActionsId] = useState(null)
+    const [contactPendingDeletion, setContactPendingDeletion] = useState(null)
     const selectedContact = contactList.find((contact) => contact.id === selectedContactId) ?? null
 
     const updateContact = (updatedContact) => {
         setContactList((currentContacts) => currentContacts.map((contact) => (
             contact.id === updatedContact.id ? updatedContact : contact
         )))
+    }
+
+    const goToModuleRecord = (contact) => {
+        setOpenActionsId(null)
+
+        if (typeof onGoToModuleRecord === 'function') {
+            onGoToModuleRecord(contact)
+            return
+        }
+
+        setSelectedContactId(contact.id)
+    }
+
+    const requestContactDeletion = (contact) => {
+        setOpenActionsId(null)
+        setContactPendingDeletion(contact)
+    }
+
+    const confirmContactDeletion = () => {
+        if (!contactPendingDeletion) return
+
+        setContactList((currentContacts) => currentContacts.filter((contact) => (
+            contact.id !== contactPendingDeletion.id
+        )))
+        setSelectedContactId((currentId) => (
+            currentId === contactPendingDeletion.id ? null : currentId
+        ))
+        setContactPendingDeletion(null)
     }
 
     return (
@@ -89,7 +119,10 @@ export default function Contacts() {
                                 className="contacts__name-button"
                                 type="button"
                                 aria-pressed={selectedContact?.id === contact.id}
-                                onClick={() => setSelectedContactId(contact.id)}
+                                onClick={() => {
+                                    setOpenActionsId(null)
+                                    setSelectedContactId(contact.id)
+                                }}
                             >
                               {contact.firstName}
                             </button>
@@ -102,9 +135,34 @@ export default function Contacts() {
                                         <td data-label="Email"><span className="contacts__muted">{contact.email}</span></td>
                                         <td data-label="Location"><span className="contacts__muted">{contact.location}</span></td>
                                         <td className="contacts__row-action">
-                                            <button type="button" aria-label={`Actions for ${contact.firstName} ${contact.lastName}`}>
+                                            <button
+                                                type="button"
+                                                aria-label={`Actions for ${contact.firstName} ${contact.lastName}`}
+                                                aria-expanded={openActionsId === contact.id}
+                                                aria-haspopup="menu"
+                                                onClick={() => setOpenActionsId((currentId) => (
+                                                    currentId === contact.id ? null : contact.id
+                                                ))}
+                                            >
                                                 ⋮
                                             </button>
+                                            {openActionsId === contact.id && (
+                                                <div className="contacts__action-menu" role="menu">
+                                                    <button type="button" role="menuitem" onClick={() => goToModuleRecord(contact)}>
+                                                        <span aria-hidden="true">↗</span>
+                                                        Go to module record
+                                                    </button>
+                                                    <button
+                                                        className="contacts__action-menu-delete"
+                                                        type="button"
+                                                        role="menuitem"
+                                                        onClick={() => requestContactDeletion(contact)}
+                                                    >
+                                                        <span aria-hidden="true">⌫</span>
+                                                        Delete
+                                                    </button>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}
@@ -132,6 +190,42 @@ export default function Contacts() {
                     />
                 </div>
             </section>
+
+            {contactPendingDeletion && (
+                <div className="contacts__dialog-backdrop" role="presentation">
+                    <section
+                        className="contacts__confirm-dialog"
+                        role="alertdialog"
+                        aria-modal="true"
+                        aria-labelledby="delete-contact-title"
+                        aria-describedby="delete-contact-description"
+                    >
+                        <span className="contacts__confirm-icon" aria-hidden="true">!</span>
+                        <h2 id="delete-contact-title">Delete contact?</h2>
+                        <p id="delete-contact-description">
+                            Are you sure you want to delete {contactPendingDeletion.firstName}{' '}
+                            {contactPendingDeletion.lastName}? This action cannot be undone.
+                        </p>
+                        <div className="contacts__confirm-actions">
+                            <button
+                                autoFocus
+                                className="contacts__confirm-cancel"
+                                type="button"
+                                onClick={() => setContactPendingDeletion(null)}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                className="contacts__confirm-delete"
+                                type="button"
+                                onClick={confirmContactDeletion}
+                            >
+                                Delete contact
+                            </button>
+                        </div>
+                    </section>
+                </div>
+            )}
         </main>
     )
 }

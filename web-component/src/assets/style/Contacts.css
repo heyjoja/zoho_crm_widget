@@ -296,7 +296,11 @@
     text-align: center !important;
 }
 
-.contacts__row-action button {
+.contacts__row-action {
+    position: relative;
+}
+
+.contacts__row-action > button {
     display: inline-grid;
     width: 30px;
     height: 30px;
@@ -309,8 +313,150 @@
     font-size: 20px;
 }
 
-.contacts__row-action button:hover {
+.contacts__row-action > button:hover,
+.contacts__row-action > button[aria-expanded='true'] {
     background: #eaf1f6;
+}
+
+.contacts__action-menu {
+    position: absolute;
+    z-index: 30;
+    top: calc(50% + 19px);
+    right: 10px;
+    display: grid;
+    width: 190px;
+    padding: 6px;
+    border: 1px solid #d5dde7;
+    border-radius: 9px;
+    background: #fff;
+    box-shadow: 0 12px 28px rgba(0, 55, 104, 0.16);
+}
+
+.contacts__table tbody tr:nth-last-child(-n + 3) .contacts__action-menu {
+    top: auto;
+    bottom: calc(50% + 19px);
+}
+
+.contacts__action-menu button {
+    display: flex;
+    width: 100%;
+    min-height: 36px;
+    align-items: center;
+    gap: 9px;
+    padding: 7px 9px;
+    border: 0;
+    border-radius: 6px;
+    color: #33475a;
+    background: transparent;
+    font-size: 11px;
+    font-weight: 700;
+    text-align: left;
+}
+
+.contacts__action-menu button:hover {
+    background: #eef3f7;
+}
+
+.contacts__action-menu button > span {
+    display: grid;
+    width: 18px;
+    place-items: center;
+    color: #0a4f7c;
+    font-size: 15px;
+}
+
+.contacts__action-menu .contacts__action-menu-delete {
+    color: #a23a3a;
+}
+
+.contacts__action-menu .contacts__action-menu-delete:hover {
+    background: #fff0f0;
+}
+
+.contacts__action-menu .contacts__action-menu-delete > span {
+    color: #a23a3a;
+}
+
+.contacts__dialog-backdrop {
+    position: fixed;
+    z-index: 1000;
+    inset: 0;
+    display: grid;
+    padding: 20px;
+    place-items: center;
+    background: rgba(0, 34, 64, 0.48);
+    backdrop-filter: blur(3px);
+}
+
+.contacts__confirm-dialog {
+    width: min(100%, 410px);
+    padding: 26px;
+    border: 1px solid #d5dde7;
+    border-radius: 14px;
+    background: #fff;
+    box-shadow: 0 24px 60px rgba(0, 34, 64, 0.24);
+    text-align: center;
+}
+
+.contacts__confirm-icon {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 14px;
+    place-items: center;
+    border-radius: 50%;
+    color: #a23a3a;
+    background: #fff0f0;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+.contacts__confirm-dialog h2 {
+    margin: 0;
+    color: #003768;
+    font-size: 19px;
+}
+
+.contacts__confirm-dialog p {
+    margin: 10px 0 22px;
+    color: #667788;
+    font-size: 12px;
+    line-height: 1.55;
+}
+
+.contacts__confirm-actions {
+    display: flex;
+    justify-content: center;
+    gap: 9px;
+}
+
+.contacts__confirm-actions button {
+    min-height: 38px;
+    padding: 0 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.contacts__confirm-cancel {
+    border-color: #b9c7d6 !important;
+    color: #33475a;
+    background: #fff;
+}
+
+.contacts__confirm-cancel:hover {
+    background: #eef3f7;
+}
+
+.contacts__confirm-delete {
+    border-color: #a23a3a !important;
+    color: #fff;
+    background: #a23a3a;
+}
+
+.contacts__confirm-delete:hover {
+    background: #842e2e;
 }
 
 .contacts__pagination {
@@ -342,6 +488,7 @@
 }
 
 .contacts__pages button:hover {
+    color: #003768;
     background: #eaf1f6;
 }
 
@@ -350,6 +497,13 @@
     border-color: #0a4f7c;
     color: #fff;
     background: #0a4f7c;
+}
+
+.contacts__pages .contacts__page--active:hover,
+.contacts__pages .contacts__next:hover {
+    border-color: #003768;
+    color: #fff;
+    background: #003768;
 }
 
 .contacts__pages .contacts__next {
