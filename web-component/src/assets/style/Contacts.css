@@ -1,3 +1,16 @@
+{
+  background: none;
+  border: 1px solid #d8e6f0;
+  border-radius: 7px;
+  cursor: pointer;
+  padding: 0.3rem 0.5rem;
+  display: flex;
+  align-items: center;
+  color: #0a4f7c;
+  transition: background 0.12s, border-color 0.12s;
+  flex-shrink: 0;
+}
+
 /* ═══════════════════════════════════════════════════════
    Qualicare brand tokens
    Primary:  #0a4f7c  (deep blue)
@@ -104,23 +117,30 @@
   align-items: flex-start;
 }
 
+/* La card de la lista NO tiene overflow:hidden para que el
+   dropdown de acciones pueda salir por encima del borde */
 .contacts__list {
   flex: 1;
   min-width: 0;
   background: #fff;
   border-radius: 12px;
   border: 1px solid #d8e6f0;
-  overflow: hidden;
   box-shadow: 0 2px 8px rgba(10, 79, 124, 0.06);
 }
 
+/* El wrapper de scroll horizontal NO puede tener overflow-y
+   de ningún tipo — eso crea el contexto que esconde el menú.
+   Para scroll horizontal se usa min-width en la tabla. */
 .contacts__table-scroll {
-  overflow-x: auto;
+  overflow: visible;
 }
 
 /* ── Table ──────────────────────────────────────────── */
 .contacts__table {
   width: 100%;
+  /* min-width evita que la tabla se comprima;
+     el contenedor padre se encarga del layout */
+  min-width: 560px;
   border-collapse: collapse;
   font-size: 0.875rem;
 }
@@ -138,6 +158,11 @@
   white-space: nowrap;
 }
 
+/* Esquinas redondeadas en el thead para mantener el look de
+   card sin necesitar overflow:hidden en el wrapper */
+.contacts__table thead tr th:first-child { border-radius: 12px 0 0 0; }
+.contacts__table thead tr th:last-child  { border-radius: 0 12px 0 0; }
+
 .contacts__table td {
   padding: 0.7rem 1rem;
   color: #1a2b3c;
@@ -148,13 +173,50 @@
   border-bottom: none;
 }
 
+/* Esquinas redondeadas en el último row */
+.contacts__table tbody tr:last-child td:first-child { border-radius: 0 0 0 12px; }
+.contacts__table tbody tr:last-child td:last-child  { border-radius: 0 0 12px 0; }
+
 .contacts__table tbody tr:hover {
   background: #f7fafd;
+}
+
+/* ── Row con menú abierto: elevar sobre las filas posteriores ── */
+.contacts__table tbody tr.contacts__row--menu-open {
+  position: relative;
+  z-index: 10;
 }
 
 .contacts__check-cell {
   width: 2.5rem;
   text-align: center;
+}
+
+/* ── QID column ─────────────────────────────────────── */
+.contacts__qid-cell {
+  width: 4rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.contacts__qid-badge {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #0a4f7c;
+  background: #e8f0f7;
+  border: 1px solid #d8e6f0;
+  border-radius: 6px;
+  padding: 0.15rem 0.45rem;
+  letter-spacing: 0.02em;
+  min-width: 2rem;
+  text-align: center;
+}
+
+.contacts__qid-empty {
+  color: #b0c4d8;
+  font-size: 0.85rem;
 }
 
 /* ── Avatar + Name cell ─────────────────────────────── */
@@ -168,7 +230,7 @@
 .contacts__row-avatar {
   width: 2.1rem;
   height: 2.1rem;
-  border-radius: 50%;
+  border-radius: 8px;
   background: linear-gradient(135deg, #0a4f7c, #0d6ba8);
   color: #fff;
   font-size: 0.68rem;
@@ -180,6 +242,20 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   border: 2px solid #d8e6f0;
+  overflow: hidden;
+}
+
+.contacts__row-avatar--photo {
+  background: #e8f0f7;
+  border-color: #d8e6f0;
+  padding: 0;
+}
+
+.contacts__row-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .contacts__avatar-icon {
@@ -238,11 +314,13 @@
   color: #0a4f7c;
 }
 
+/* El menú usa position:absolute relativo al wrapper.
+   z-index alto para que flote sobre las demás filas. */
 .contacts__actions-menu {
   position: absolute;
   right: 0;
   top: calc(100% + 4px);
-  z-index: 100;
+  z-index: 9999;
   background: #fff;
   border: 1px solid #d8e6f0;
   border-radius: 8px;
@@ -309,7 +387,7 @@
 .contacts__details-avatar {
   width: 2.9rem;
   height: 2.9rem;
-  border-radius: 50%;
+  border-radius: 10px;
   background: rgba(185, 152, 80, 0.25);
   border: 2px solid rgba(185, 152, 80, 0.6);
   display: flex;
@@ -319,6 +397,7 @@
   font-size: 1rem;
   flex-shrink: 0;
   color: #fff;
+  overflow: hidden;
 }
 
 .contacts__details-label {
@@ -457,6 +536,7 @@
   stroke-linejoin: round;
 }
 
+/* Single-line field editor (first/last/phone/email) */
 .contacts__field-editor {
   display: flex;
   align-items: center;
@@ -503,30 +583,14 @@
 .contacts__field-cancel:hover { background: #fdf0ef; }
 
 /* ═══════════════════════════════════════════════════════
-   Address section  —  matches AddressEditor.jsx exactly
-   Root:      <section className="contacts__address">
-   Header:    <div className="contacts__address-header">
-   Edit btn:  <button className="contacts__address-edit">
-   Form:      <form className="contacts__address-form">
-   Postal row:<div className="contacts__postal-row">
-   CC field:  <label className="contacts__country-code-field">
-   CC select: <select className="contacts__country-select">
-   PC ctrl:   <div className="contacts__postal-control">
-   Lookup msg:<p className="contacts__lookup-message contacts__lookup-message--{loading|success|error}">
-   Street sug:<div className="contacts__street-suggestions"> > <button>
-   Actions:   <div className="contacts__address-actions">
-   Cancel:    <button className="contacts__address-cancel">
-   Save:      <button className="contacts__address-save">
-   Summary:   <address className="contacts__address-summary">
+   Address section
 ═══════════════════════════════════════════════════════ */
 
-/* Root section */
 .contacts__address {
   border-top: 1px solid #e8f0f7;
   border-bottom: 1px solid #e8f0f7;
 }
 
-/* Section header row: label + title + edit button */
 .contacts__address-header {
   display: flex;
   align-items: center;
@@ -551,7 +615,6 @@
   color: #0a4f7c;
 }
 
-/* Edit pencil button (view mode) */
 .contacts__address-edit {
   background: none;
   border: 1px solid #d8e6f0;
@@ -580,25 +643,45 @@
   border-color: #0a4f7c;
 }
 
-/* Read-only summary (<address>) */
+.contacts__address-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 1rem 0.85rem;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #0a4f7c;
+  background: transparent;
+  border: 1px solid #d8e6f0;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.contacts__address-edit-btn:hover {
+  background: #edf5fc;
+  border-color: #0a4f7c;
+}
+
 .contacts__address-summary {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  padding: 0 1rem 0.85rem;
+  padding: 0 1rem 0.5rem;
   font-style: normal;
   font-size: 0.875rem;
   color: #1a2b3c;
   line-height: 1.55;
 }
 
-.contacts__address-summary strong {
-  font-weight: 600;
-  color: #1a2b3c;
+.contacts__address-summary p {
+  margin: 0.1rem 0;
 }
 
-.contacts__address-summary span {
-  color: #4a6278;
+.contacts__address-summary .contacts__address-empty {
+  color: #6b7f93;
+  font-style: italic;
 }
 
 /* ── Edit form ───────────────────────────────────────── */
@@ -609,24 +692,25 @@
   padding: 0 1rem 1rem;
 }
 
-/* All labels inside the form */
 .contacts__address-form label {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
 }
 
-.contacts__address-form label > span {
+.contacts__address-form label > span,
+.contacts__address-label {
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: #6b7f93;
+  display: block;
+  margin-bottom: 0.2rem;
 }
 
-/* All inputs + selects inside the form */
 .contacts__address-form input,
-.contacts__address-form select {
+.contacts__address-input {
   padding: 0.38rem 0.6rem;
   border: 1.5px solid #d8e6f0;
   border-radius: 7px;
@@ -640,64 +724,44 @@
 }
 
 .contacts__address-form input:focus,
-.contacts__address-form select:focus {
+.contacts__address-input:focus {
   border-color: #0a4f7c;
   box-shadow: 0 0 0 3px rgba(10, 79, 124, 0.1);
 }
 
-/* Row with country-code + postal code side by side */
+.contacts__address-postal-row,
 .contacts__postal-row {
   display: flex;
   gap: 0.5rem;
   align-items: flex-end;
+  flex-wrap: wrap;
 }
 
-/* Country code label stretches less than postal */
-.contacts__country-code-field {
-  flex: 0 0 auto;
-  min-width: 140px;
+.contacts__address-postal-row > div {
+  flex: 1 1 100px;
+  min-width: 80px;
 }
 
-.contacts__country-select {
-  cursor: pointer;
-}
-
-/* Postal code input + search button wrapper */
-.contacts__postal-control {
-  display: flex;
-  gap: 0.3rem;
+.contacts__address-search-btn {
+  display: inline-flex;
   align-items: center;
-}
-
-.contacts__postal-control input {
-  flex: 1;
-}
-
-.contacts__postal-control button {
-  flex-shrink: 0;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: #fff;
   background: #0a4f7c;
-  border: none;
+  border: 1px solid #0a4f7c;
   border-radius: 7px;
   cursor: pointer;
-  padding: 0.38rem 0.55rem;
-  display: flex;
-  align-items: center;
-  color: #fff;
+  align-self: flex-end;
   transition: background 0.15s;
 }
 
-.contacts__postal-control button:hover:not(:disabled) {
-  background: #083d60;
-}
-
-.contacts__postal-control button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.contacts__postal-control button svg {
-  width: 15px;
-  height: 15px;
+.contacts__address-search-btn svg {
+  width: 14px;
+  height: 14px;
   fill: none;
   stroke: currentColor;
   stroke-width: 2;
@@ -705,7 +769,16 @@
   stroke-linejoin: round;
 }
 
-/* Lookup status message */
+.contacts__address-search-btn:hover:not(:disabled) {
+  background: #083d60;
+}
+
+.contacts__address-search-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.contacts__address-status,
 .contacts__lookup-message {
   display: flex;
   align-items: flex-start;
@@ -717,84 +790,24 @@
   border-radius: 6px;
 }
 
+.contacts__address-status--loading,
 .contacts__lookup-message--loading {
   background: #f4f8fb;
   color: #4a6278;
 }
 
-.contacts__lookup-message--loading span {
-  display: inline-block;
-  width: 0.8rem;
-  height: 0.8rem;
-  border: 2px solid #d8e6f0;
-  border-top-color: #0a4f7c;
-  border-radius: 50%;
-  flex-shrink: 0;
-  margin-top: 0.1rem;
-  animation: spin 0.75s linear infinite;
-}
-
+.contacts__address-status--success,
 .contacts__lookup-message--success {
   background: #eafaf1;
   color: #1a8a4a;
 }
 
+.contacts__address-status--error,
 .contacts__lookup-message--error {
   background: #fdf0ef;
   color: #c0392b;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Street suggestions list */
-.contacts__street-suggestions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.contacts__street-suggestions > span {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6b7f93;
-}
-
-.contacts__street-suggestions button {
-  background: #f4f8fb;
-  border: 1px solid #d8e6f0;
-  border-radius: 7px;
-  cursor: pointer;
-  padding: 0.45rem 0.65rem;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  width: 100%;
-  transition: background 0.1s, border-color 0.1s;
-}
-
-.contacts__street-suggestions button:hover {
-  background: #e5f0fa;
-  border-color: #0a4f7c;
-}
-
-.contacts__street-suggestions strong {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #1a2b3c;
-}
-
-.contacts__street-suggestions small {
-  font-size: 0.72rem;
-  color: #6b7f93;
-  line-height: 1.4;
-}
-
-/* Form action buttons row */
 .contacts__address-actions {
   display: flex;
   justify-content: flex-end;
@@ -802,6 +815,7 @@
   padding-top: 0.25rem;
 }
 
+.contacts__address-btn-cancel,
 .contacts__address-cancel {
   background: #fff;
   border: 1px solid #d8e6f0;
@@ -814,11 +828,13 @@
   transition: background 0.12s, border-color 0.12s;
 }
 
+.contacts__address-btn-cancel:hover,
 .contacts__address-cancel:hover {
   background: #f4f8fb;
   border-color: #b0c4d8;
 }
 
+.contacts__address-btn-save,
 .contacts__address-save {
   background: #0a4f7c;
   border: 1px solid #0a4f7c;
@@ -834,11 +850,13 @@
   transition: background 0.15s, box-shadow 0.15s;
 }
 
+.contacts__address-btn-save:hover,
 .contacts__address-save:hover {
   background: #083d60;
   box-shadow: 0 2px 8px rgba(10, 79, 124, 0.25);
 }
 
+.contacts__address-btn-save svg,
 .contacts__address-save svg {
   width: 14px;
   height: 14px;
@@ -850,12 +868,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   Map card  —  matches ContactMap.jsx exactly
-   Root:    <section className="contacts__map-card">
-   Header:  <div className="contacts__map-header">
-   Map div: <div className="contacts__map">
-   State:   <div className="contacts__map-state contacts__map-state--{loading|error|empty}">
-   Loader:  <span className="contacts__map-loader">
+   Map card
 ═══════════════════════════════════════════════════════ */
 .contacts__map-card {
   display: flex;
@@ -935,6 +948,10 @@
   border-top-color: #0a4f7c;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 /* ═══════════════════════════════════════════════════════
@@ -1022,12 +1039,256 @@
     padding: 0.6rem 0.6rem;
   }
 
+  .contacts__address-postal-row,
   .contacts__postal-row {
     flex-direction: column;
   }
 
-  .contacts__country-code-field {
+  .contacts__address-postal-row > div {
     min-width: 0;
     width: 100%;
   }
+
+  .contacts__address-search-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Address editor — inline form inside detail field
+═══════════════════════════════════════════════════════ */
+
+.contacts__address-editor {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.contacts__address-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  width: 100%;
+}
+
+.contacts__address-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7f93;
+  display: block;
+}
+
+.contacts__address-input,
+.contacts__address-select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.38rem 0.6rem;
+  border: 1.5px solid #d8e6f0;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 0.875rem;
+  color: #1a2b3c;
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.contacts__address-input:focus,
+.contacts__address-select:focus {
+  border-color: #0a4f7c;
+  box-shadow: 0 0 0 3px rgba(10, 79, 124, 0.1);
+}
+
+.contacts__address-postal {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.contacts__address-postal .contacts__address-input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ── Address Editor Form ─────────────────────────────────────── */
+.address-editor__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.25rem 0;
+}
+
+/* Generic single field (label + input/select stacked) */
+.address-editor__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1 1 auto;
+}
+
+.address-editor__field label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #555;
+}
+
+.address-editor__field input,
+.address-editor__field select {
+    width: 100%;
+    padding: 0.35rem 0.5rem;
+    font-size: 0.875rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    box-sizing: border-box;
+}
+
+.address-editor__field input:focus,
+.address-editor__field select:focus {
+    outline: none;
+    border-color: #0070f3;
+    box-shadow: 0 0 0 2px rgba(0, 112, 243, 0.15);
+}
+
+/* Inline row: places children side by side */
+.address-editor__row--inline {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+/* Postal code field: takes remaining space */
+.address-editor__field--postal {
+    flex: 1 1 auto;
+}
+
+/* Country code selector: fixed narrow width */
+.address-editor__field--country-code {
+    flex: 0 0 6rem;
+}
+
+.address-editor__field--country-code select {
+    width: 100%;
+}
+
+/* Search button: icon only, aligned to bottom of the row */
+.address-editor__search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 2.25rem;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    align-self: flex-end;
+    margin-bottom: 0;
+}
+
+.address-editor__search-btn svg {
+    width: 1rem;
+    height: 1rem;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.address-editor__search-btn:hover {
+    background: #f0f0f0;
+    border-color: #999;
+}
+
+.address-editor__search-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Lookup status message */
+.address-editor__lookup-msg {
+    font-size: 0.78rem;
+    margin: 0;
+    padding: 0.25rem 0.4rem;
+    border-radius: 4px;
+}
+
+.address-editor__lookup-msg--loading {
+    color: #555;
+    background: #f5f5f5;
+}
+
+.address-editor__lookup-msg--success {
+    color: #186a3b;
+    background: #eafaf1;
+}
+
+.address-editor__lookup-msg--error {
+    color: #c0392b;
+    background: #fdf2f2;
+}
+
+.address-editor__lookup-msg--idle {
+    display: none;
+}
+
+/* Form action buttons (Save / Cancel) */
+.address-editor__actions {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+}
+
+.address-editor__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.address-editor__btn svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.address-editor__btn--save {
+    background: #0070f3;
+    color: #fff;
+    border-color: #0070f3;
+}
+
+.address-editor__btn--save:hover {
+    background: #005bb5;
+    border-color: #005bb5;
+}
+
+.address-editor__btn--cancel {
+    background: #fff;
+    color: #444;
+    border-color: #ccc;
+}
+
+.address-editor__btn--cancel:hover {
+    background: #f5f5f5;
 }

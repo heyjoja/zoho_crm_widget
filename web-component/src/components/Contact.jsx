@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import DetailContact from './DetailContact.jsx'
 import LanguagePicker from './LanguagePicker.jsx'
 import { useLanguage } from '../language/LanguageContext.jsx'
@@ -19,7 +20,23 @@ const getInitials = ({ firstName, lastName }) => {
 }
 
 function ContactAvatar({ contact }) {
+  const [imgError, setImgError] = useState(false)
   const initials = getInitials(contact)
+  const hasImage = contact.recordImage && !imgError
+
+  if (hasImage) {
+    return (
+        <span className="contacts__row-avatar contacts__row-avatar--photo" aria-hidden="true">
+          <img
+              src={contact.recordImage}
+              alt=""
+              className="contacts__row-avatar-img"
+              onError={() => setImgError(true)}
+          />
+        </span>
+    )
+  }
+
   return (
       <span className="contacts__row-avatar" aria-hidden="true">
         {initials ? initials : <DefaultAvatarIcon />}
@@ -37,6 +54,7 @@ export default function Contact({ onGoToModuleRecord }) {
   const [contactList, setContactList] = useState([])
   const [selectedContactId, setSelectedContactId] = useState(null)
   const [openActionsId, setOpenActionsId] = useState(null)
+  const [openActionsRect, setOpenActionsRect] = useState(null)   // ← nuevo
   const [contactPendingDeletion, setContactPendingDeletion] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [searchError, setSearchError] = useState(null)
@@ -67,7 +85,6 @@ export default function Contact({ onGoToModuleRecord }) {
   useEffect(() => {
     const trimmed = searchTerm.trim()
 
-    // When search is cleared, reload the initial list
     if (trimmed.length === 0) {
       if (sdkReady) {
         setInitialLoading(true)
@@ -84,7 +101,6 @@ export default function Contact({ onGoToModuleRecord }) {
       return
     }
 
-    // Not enough characters yet — don't call the API
     if (trimmed.length < SEARCH_MIN_LENGTH) {
       setSearching(false)
       clearTimeout(debounceTimer.current)
@@ -118,20 +134,20 @@ export default function Contact({ onGoToModuleRecord }) {
 
   const openDetails = (contact) => {
     setOpenActionsId(null)
+    setOpenActionsRect(null)
     setSelectedContactId(contact.id)
   }
 
   const goToModuleRecord = (contact) => {
     setOpenActionsId(null)
-    if (typeof onGoToModuleRecord === 'function') {
-      onGoToModuleRecord(contact)
-      return
-    }
-    openDetails(contact)
+    setOpenActionsRect(null)
+    const url = `https://crm.zoho.com/crm/org938042819/tab/Contacts/${contact.id}`
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   const requestContactDeletion = (contact) => {
     setOpenActionsId(null)
+    setOpenActionsRect(null)
     setContactPendingDeletion(contact)
   }
 
@@ -142,12 +158,25 @@ export default function Contact({ onGoToModuleRecord }) {
     setContactPendingDeletion(null)
   }
 
+  // ← captura la posición del botón y la guarda para el portal
+  const handleTriggerClick = (e, contactId) => {
+    if (openActionsId === contactId) {
+      setOpenActionsId(null)
+      setOpenActionsRect(null)
+    } else {
+      setOpenActionsId(contactId)
+      setOpenActionsRect(e.currentTarget.getBoundingClientRect())
+    }
+  }
+
   const isLoading = initialLoading || searching
 
   const searchHint =
       searchTerm.length > 0 && searchTerm.trim().length < SEARCH_MIN_LENGTH
           ? `Type at least ${SEARCH_MIN_LENGTH} characters to search`
           : null
+
+  const openContact = openActionsId ? contactList.find((c) => c.id === openActionsId) : null
 
   return (
       <main className="contacts">
@@ -211,6 +240,7 @@ export default function Contact({ onGoToModuleRecord }) {
                     <th className="contacts__check-cell">
                       <input type="checkbox" aria-label={t.selectAll ?? 'Select all contacts'} />
                     </th>
+                    <th className="contacts__qid-cell">{t.qid ?? '#'}</th>
                     <th>{t.name ?? 'Name'}</th>
                     <th>{t.phone ?? 'Phone'}</th>
                     <th>{t.email ?? 'Email'}</th>
@@ -221,7 +251,7 @@ export default function Contact({ onGoToModuleRecord }) {
                   <tbody>
                   {contactList.length === 0 && !isLoading && (
                       <tr>
-                        <td colSpan={6} style={{ textAlign: 'center', padding: '1rem', color: '#888' }}>
+                        <td colSpan={7} style={{ textAlign: 'center', padding: '1rem', color: '#888' }}>
                           {searchError
                               ? 'Load failed. See error above.'
                               : searchTerm.trim().length >= SEARCH_MIN_LENGTH
@@ -231,12 +261,20 @@ export default function Contact({ onGoToModuleRecord }) {
                       </tr>
                   )}
                   {contactList.map((contact) => (
-                      <tr key={contact.id}>
+                      <tr
+                          key={contact.id}
+                          className={openActionsId === contact.id ? 'contacts__row--menu-open' : undefined}
+                      >
                         <td className="contacts__check-cell">
                           <input
                               type="checkbox"
                               aria-label={`${t.select ?? 'Select'} ${contact.firstName} ${contact.lastName}`}
                           />
+                        </td>
+                        <td className="contacts__qid-cell">
+                          {contact.qid != null
+                              ? <span className="contacts__qid-badge">{contact.qid}</span>
+                              : <span className="contacts__qid-empty">—</span>}
                         </td>
                         <td>
                           <div className="contacts__name-cell">
@@ -254,29 +292,18 @@ export default function Contact({ onGoToModuleRecord }) {
                         <td>{contact.email}</td>
                         <td>{contact.location}</td>
                         <td className="contacts__actions-cell">
+                          {/* Solo queda el trigger; el menú se monta en <body> vía portal */}
                           <div className="contacts__actions-wrapper">
                             <button
                                 className="contacts__action-trigger"
                                 type="button"
                                 aria-label={`${t.actions ?? 'Actions for'} ${contact.firstName} ${contact.lastName}`}
-                                onClick={() => setOpenActionsId(openActionsId === contact.id ? null : contact.id)}
+                                aria-haspopup="menu"
+                                aria-expanded={openActionsId === contact.id}
+                                onClick={(e) => handleTriggerClick(e, contact.id)}
                             >
                               ⋯
                             </button>
-                            {openActionsId === contact.id && (
-                                <div className="contacts__actions-menu">
-                                  <button type="button" onClick={() => goToModuleRecord(contact)}>
-                                    {t.goToRecord ?? 'Go to module record'}
-                                  </button>
-                                  <button
-                                      type="button"
-                                      className="contacts__action--danger"
-                                      onClick={() => requestContactDeletion(contact)}
-                                  >
-                                    {t.delete ?? 'Delete'}
-                                  </button>
-                                </div>
-                            )}
                           </div>
                         </td>
                       </tr>
@@ -295,6 +322,33 @@ export default function Contact({ onGoToModuleRecord }) {
             )}
           </div>
         </section>
+
+        {/* Portal: el menú se pinta directamente en <body>, encima de todo */}
+        {openContact && openActionsRect && createPortal(
+            <div
+                className="contacts__actions-menu"
+                role="menu"
+                style={{
+                  position: 'fixed',
+                  top: openActionsRect.bottom + 4,
+                  right: window.innerWidth - openActionsRect.right,
+                  zIndex: 99999,
+                }}
+            >
+              <button type="button" role="menuitem" onClick={() => goToModuleRecord(openContact)}>
+                {t.goToRecord ?? 'Go to module record'}
+              </button>
+              <button
+                  type="button"
+                  role="menuitem"
+                  className="contacts__action--danger"
+                  onClick={() => requestContactDeletion(openContact)}
+              >
+                {t.delete ?? 'Delete'}
+              </button>
+            </div>,
+            document.body
+        )}
 
         {contactPendingDeletion && (
             <div className="contacts__modal-overlay" role="dialog" aria-modal="true">

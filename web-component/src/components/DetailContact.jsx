@@ -74,7 +74,6 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
         setDraftValue('')
     }
 
-    // Drag → update map position AND trigger reverse geocode in AddressEditor
     const handleMarkerDrag = (coords) => {
         setPreviewCoordinates(coords)
         setDraggedCoordinates(coords)
@@ -158,12 +157,11 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
             <AddressEditor
                 contactId={contact.id}
                 address={{
-                    streetAddress: contact.streetAddress,
-                    postalCode: contact.postalCode,
-                    city: contact.city,
-                    provinceState: contact.provinceState,
-                    country: contact.country,
-                    countryCode: contact.countryCode,
+                    streetAddress: contact.streetAddress ?? '',
+                    postalCode: contact.postalCode ?? '',
+                    city: contact.city ?? '',
+                    provinceState: contact.provinceState ?? '',
+                    country: contact.country ?? '',
                 }}
                 onEditingChange={setIsAddressEditing}
                 onPreviewLocation={setPreviewCoordinates}
@@ -174,6 +172,7 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
                     setDraggedCoordinates(null)
                     setIsAddressEditing(false)
 
+                    // Rebuild the display location string from the saved address parts
                     const location = [
                         address.streetAddress,
                         address.city,
