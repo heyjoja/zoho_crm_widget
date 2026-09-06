@@ -1,11 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <title>Web Component</title>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>web-component</title>
+
+  <!-- Load Zoho CRM Embedded App SDK FIRST (note: one 'd' in Embeded) -->
+  <script src="https://live.zwidgets.com/js-sdk/1.2/ZohoEmbededAppSDK.min.js"></script>
+
+  <script>
+    // Expose a promise that resolves with PageLoad data when the SDK is ready,
+    // or rejects with an Error if the SDK is missing or fails to initialize.
+    window.__zohoReady = new Promise(function (resolve, reject) {
+      try {
+        if (typeof ZOHO === 'undefined' || !ZOHO.embeddedApp) {
+          reject(new Error('ZOHO SDK script did not load or is unavailable.'));
+          return;
+        }
+
+        // Register PageLoad BEFORE calling init()
+        ZOHO.embeddedApp.on('PageLoad', function (data) {
+          resolve(data);
+        });
+
+        ZOHO.embeddedApp.init();
+      } catch (err) {
+        reject(err);
+      }
+    });
+
+    // Log unhandled rejection so it is visible in DevTools even if no
+    // component catches it yet.
+    window.__zohoReady.catch(function (err) {
+      console.error('[Zoho] SDK initialization failed:', err.message);
+    });
+  </script>
 </head>
 <body>
-<div id="root"></div>
-<!-- Scripts are injected by webpack/vite -->
+  <div id="root"></div>
 </body>
 </html>

@@ -18,12 +18,8 @@ export default {
         clean: true,
     },
 
-
     optimization: {
-        // Emit the webpack runtime as its own chunk to improve long-term caching
         runtimeChunk: 'single',
-
-        // Only split chunks in production — dev doesn't need it and it causes noisy warnings
         ...(isProduction && {
             splitChunks: {
                 chunks: 'all',
@@ -51,7 +47,6 @@ export default {
         }),
     },
 
-    // Disable performance hints in development, use warnings only in production
     performance: isProduction
         ? {
             maxAssetSize: 2 * 1024 * 1024,
@@ -91,20 +86,25 @@ export default {
 
     plugins: [
         new HtmlWebpackPlugin({
-            template: './index.html',
+            template: './public/index.html', // ← Now points to the correct file
             filename: 'index.html',
+            inject: 'body',
+            scriptLoading: 'blocking',
         }),
         ...(isProduction
             ? [new MiniCssExtractPlugin({
                 filename: 'css/styles.[contenthash].css',
             })]
-            : []),  // ← Solo en producción
+            : []),
     ],
 
     devServer: {
         port: 3000,
         hot: true,
         historyApiFallback: true,
+        static: {
+            directory: path.resolve(__dirname, 'public'), // ← Serve public assets in dev
+        },
     },
 
     ignoreWarnings: [
