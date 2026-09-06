@@ -35,7 +35,6 @@ const CancelIcon = () => (
 
 const renderValue = (contact, field) => {
     const value = contact[field.key]
-
     if (field.key === 'phone') return <a href={`tel:${value}`}>{value}</a>
     if (field.key === 'email') return <a href={`mailto:${value}`}>{value}</a>
     return value
@@ -44,10 +43,16 @@ const renderValue = (contact, field) => {
 export default function DetailContact({ contact, onUpdate, onClose }) {
     const [editingField, setEditingField] = useState(null)
     const [draftValue, setDraftValue] = useState('')
+    const [previewCoordinates, setPreviewCoordinates] = useState(null)
+    const [draggedCoordinates, setDraggedCoordinates] = useState(null)
+    const [isAddressEditing, setIsAddressEditing] = useState(false)
 
     useEffect(() => {
         setEditingField(null)
         setDraftValue('')
+        setPreviewCoordinates(null)
+        setDraggedCoordinates(null)
+        setIsAddressEditing(false)
     }, [contact?.id])
 
     if (!contact) return null
@@ -59,11 +64,7 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
 
     const saveField = () => {
         if (!editingField) return
-
-        onUpdate({
-            ...contact,
-            [editingField]: draftValue.trim(),
-        })
+        onUpdate({ ...contact, [editingField]: draftValue.trim() })
         setEditingField(null)
         setDraftValue('')
     }
@@ -71,6 +72,12 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
     const cancelEditing = () => {
         setEditingField(null)
         setDraftValue('')
+    }
+
+    // Drag → update map position AND trigger reverse geocode in AddressEditor
+    const handleMarkerDrag = (coords) => {
+        setPreviewCoordinates(coords)
+        setDraggedCoordinates(coords)
     }
 
     return (
@@ -86,10 +93,7 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
                     className="contacts__details-close"
                     type="button"
                     aria-label="Close contact details"
-                    onClick={() => {
-                        cancelEditing()
-                        onClose()
-                    }}
+                    onClick={() => { cancelEditing(); onClose() }}
                 >
                     ×
                 </button>
@@ -98,18 +102,17 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
             <dl className="contacts__details-list">
                 {fields.map((field) => {
                     const isEditing = editingField === field.key
-
                     return (
-                        <div className={isEditing ? 'contacts__detail-field contacts__detail-field--editing' : 'contacts__detail-field'} key={field.key}>
+                        <div
+                            className={isEditing ? 'contacts__detail-field contacts__detail-field--editing' : 'contacts__detail-field'}
+                            key={field.key}
+                        >
                             <dt>{field.label}</dt>
                             <dd>
                                 {isEditing ? (
                                     <form
                                         className="contacts__field-editor"
-                                        onSubmit={(event) => {
-                                            event.preventDefault()
-                                            saveField()
-                                        }}
+                                        onSubmit={(event) => { event.preventDefault(); saveField() }}
                                     >
                                         <input
                                             autoFocus
@@ -117,9 +120,7 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
                                             value={draftValue}
                                             aria-label={`Edit ${field.label}`}
                                             onChange={(event) => setDraftValue(event.target.value)}
-                                            onKeyDown={(event) => {
-                                                if (event.key === 'Escape') cancelEditing()
-                                            }}
+                                            onKeyDown={(event) => { if (event.key === 'Escape') cancelEditing() }}
                                         />
                                         <div className="contacts__field-editor-actions">
                                             <button
@@ -164,7 +165,15 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
                     country: contact.country,
                     countryCode: contact.countryCode,
                 }}
+                onEditingChange={setIsAddressEditing}
+                onPreviewLocation={setPreviewCoordinates}
+                draggedCoordinates={draggedCoordinates}
                 onSave={(address) => {
+                    const coordsToSave = previewCoordinates
+                    setPreviewCoordinates(null)
+                    setDraggedCoordinates(null)
+                    setIsAddressEditing(false)
+
                     const location = [
                         address.streetAddress,
                         address.city,
@@ -173,12 +182,22 @@ export default function DetailContact({ contact, onUpdate, onClose }) {
                         address.country,
                     ].filter(Boolean).join(', ')
 
-                    onUpdate({ ...contact, ...address, location })
+                    onUpdate({
+                        ...contact,
+                        ...address,
+                        location,
+                        ...(coordsToSave && {
+                            coordinatesLng: coordsToSave[0],
+                            coordinatesLat: coordsToSave[1],
+                        }),
+                    })
                 }}
             />
 
             <ContactMap
                 location={contact.location}
+                previewCoordinates={previewCoordinates}
+                onMarkerDrag={isAddressEditing ? handleMarkerDrag : undefined}
             />
         </aside>
     )
