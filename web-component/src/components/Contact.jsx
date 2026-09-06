@@ -5,6 +5,7 @@ import LanguagePicker from './LanguagePicker.jsx'
 import { useLanguage } from '../language/LanguageContext.jsx'
 import { useZoho } from '../context/ZohoContext.jsx'
 import { getAllContacts, searchContacts } from '../utils/zohoSDK.js'
+import CreateContact from './CreateContact.jsx'
 
 const DefaultAvatarIcon = () => (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="contacts__avatar-icon">
@@ -60,6 +61,7 @@ export default function Contact({ onGoToModuleRecord }) {
   const [searchError, setSearchError] = useState(null)
   const [searching, setSearching] = useState(false)
   const [initialLoading, setInitialLoading] = useState(false)
+  const [showCreate, setShowCreate] = useState(false)
 
   const debounceTimer = useRef(null)
   const selectedContact = contactList.find((c) => c.id === selectedContactId) ?? null
@@ -186,7 +188,7 @@ export default function Contact({ onGoToModuleRecord }) {
           </div>
           <div className="contacts__header-actions">
             <LanguagePicker />
-            <button className="contacts__button contacts__button--primary" type="button">
+            <button className="contacts__button contacts__button--primary" type="button" onClick={() => setShowCreate(true)}>
               <span aria-hidden="true">＋</span>
               {t.addContact ?? 'Add contact'}
             </button>
@@ -374,6 +376,24 @@ export default function Contact({ onGoToModuleRecord }) {
                 </div>
               </div>
             </div>
+        )}
+
+        {showCreate && (
+            <CreateContact
+                onClose={() => setShowCreate(false)}
+                onCreated={() => {
+                    setShowCreate(false)
+                    // Reload the contact list so the new entry appears
+                    setInitialLoading(true)
+                    getAllContacts()
+                        .then((contacts) => {
+                            setContactList(contacts)
+                            setSearchError(null)
+                        })
+                        .catch((err) => setSearchError(err.message))
+                        .finally(() => setInitialLoading(false))
+                }}
+            />
         )}
       </main>
   )

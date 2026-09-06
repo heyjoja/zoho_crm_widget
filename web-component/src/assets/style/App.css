@@ -561,6 +561,157 @@
   background: #f4f8fb;
 }
 
+/* ── Unsaved changes banner ───────────────────────────────────────────────── */
+.contacts__unsaved-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.55rem 1rem;
+    background: #fef9ec;
+    border-bottom: 2px solid #b99850;
+    font-size: 0.8rem;
+    color: #5a4210;
+    font-family: var(--font-sans);
+}
+
+.contacts__unsaved-banner-text {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+}
+
+.contacts__unsaved-banner-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.contacts__unsaved-discard {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.7rem;
+    border: 1px solid #d1dce6;
+    border-radius: 6px;
+    background: #fff;
+    color: #4a6278;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    transition: background 0.12s, border-color 0.12s;
+    white-space: nowrap;
+}
+
+.contacts__unsaved-discard:hover {
+    background: #f4f8fb;
+    border-color: #a0b0c0;
+}
+
+.contacts__unsaved-save {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.28rem 0.7rem;
+    border: none;
+    border-radius: 6px;
+    background: #0a4f7c;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    transition: background 0.12s, box-shadow 0.12s;
+    white-space: nowrap;
+}
+
+.contacts__unsaved-save:hover {
+    background: #083d60;
+    box-shadow: 0 2px 8px rgba(10, 79, 124, 0.3);
+}
+
+/* ── Unsaved-changes confirmation dialog ──────────────────────────────────── */
+.contacts__dialog-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 30, 50, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 150;
+    border-radius: 12px;
+}
+
+.contacts__dialog {
+    background: #fff;
+    border-radius: 10px;
+    padding: 1.5rem;
+    max-width: 290px;
+    width: 90%;
+    box-shadow: 0 8px 32px rgba(10, 79, 124, 0.22);
+}
+
+.contacts__dialog h3 {
+    margin: 0 0 0.4rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1a2b3c;
+}
+
+.contacts__dialog p {
+    margin: 0 0 1.25rem;
+    font-size: 0.875rem;
+    color: #6b7f93;
+    line-height: 1.5;
+}
+
+.contacts__dialog-actions {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: flex-end;
+}
+
+.contacts__dialog-discard {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid #d1dce6;
+    border-radius: 7px;
+    background: #fff;
+    color: #4a6278;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: var(--font-sans);
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.contacts__dialog-discard:hover {
+    background: #f4f8fb;
+    border-color: #a0b0c0;
+}
+
+.contacts__dialog-save {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.9rem;
+    border: none;
+    border-radius: 7px;
+    background: #0a4f7c;
+    color: #fff;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: var(--font-sans);
+    transition: background 0.12s, box-shadow 0.12s;
+}
+
+.contacts__dialog-save:hover {
+    background: #083d60;
+    box-shadow: 0 2px 8px rgba(10, 79, 124, 0.3);
+}
+
 /* ── Responsive ─────────────────────────────────────── */
 @media (max-width: 900px) {
   .contacts__content {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLanguage } from '../language/LanguageContext.jsx'
 import {
     Map as MapLibreMap,
     Marker,
@@ -77,31 +78,44 @@ const createMap = (container, [lng, lat], location) => {
 }
 
 // onMarkerDrag: ([lng, lat]) => void  — provided only when address editor is open
-export default function ContactMap({ location, previewCoordinates, onMarkerDrag }) {
+export default function ContactMap({ location, savedCoordinates: savedCoordinatesProp, previewCoordinates, onMarkerDrag }) {
+    const { t } = useLanguage()
+
     const mapContainer = useRef(null)
     const mapRef = useRef(null)
     const markerRef = useRef(null)
-    const [savedCoordinates, setSavedCoordinates] = useState(null)
+    const [geocodedCoordinates, setGeocodedCoordinates] = useState(null)
     const [mapStatus, setMapStatus] = useState('idle')
     const [mapError, setMapError] = useState('')
 
-    // ── Step 1: geocode saved location string ─────────────────────────────────
+    // Real coordinates from CRM take priority; fall back to geocoded ones
+    const savedCoordinates = savedCoordinatesProp ?? geocodedCoordinates
+
+    // ── Step 1: geocode saved location string (only when no direct coordinates) ──
     useEffect(() => {
+        // If we already have real coordinates from CRM, skip geocoding entirely
+        if (savedCoordinatesProp) {
+            setGeocodedCoordinates(null)
+            setMapStatus('ready')
+            setMapError('')
+            return
+        }
+
         const address = location?.trim()
         if (!address) {
-            setSavedCoordinates(null)
+            setGeocodedCoordinates(null)
             setMapStatus('empty')
             return
         }
 
         const controller = new AbortController()
-        setSavedCoordinates(null)
+        setGeocodedCoordinates(null)
         setMapError('')
         setMapStatus('loading')
 
         geocodeLocation(address, controller.signal)
             .then((coords) => {
-                setSavedCoordinates(coords)
+                setGeocodedCoordinates(coords)
                 setMapStatus('ready')
             })
             .catch((error) => {
@@ -111,11 +125,18 @@ export default function ContactMap({ location, previewCoordinates, onMarkerDrag 
             })
 
         return () => controller.abort()
-    }, [location])
+    }, [location, savedCoordinatesProp])
 
     // ── Step 2: create the map once saved coordinates are available ───────────
     useEffect(() => {
-        if (!mapContainer.current || !savedCoordinates || mapRef.current) return
+        if (!mapContainer.current || !savedCoordinates) return
+
+        // Destroy existing map if coordinates changed (e.g. new contact with real coords)
+        if (mapRef.current) {
+            mapRef.current.remove()
+            mapRef.current = null
+            markerRef.current = null
+        }
 
         const { map, marker } = createMap(mapContainer.current, savedCoordinates, location)
         mapRef.current = map
@@ -193,16 +214,16 @@ export default function ContactMap({ location, previewCoordinates, onMarkerDrag 
     const showMap = displayCoordinates !== null && (mapStatus === 'ready' || previewCoordinates !== null)
 
     return (
-        <section className="contacts__map-card" aria-label="Contact location map">
+        <section className="contacts__map-card" aria-label={t.mapCardLabel ?? 'Contact location map'}>
             <div className="contacts__map-header">
                 <div>
-                    <span>Location</span>
-                    <h3>Contact map</h3>
+                    <span>{t.location ?? 'Location'}</span>
+                    <h3>{t.mapTitle ?? 'Contact map'}</h3>
                 </div>
                 {displayCoordinates && (
                     <small>
                         {displayCoordinates[1].toFixed(4)}, {displayCoordinates[0].toFixed(4)}
-                        {previewCoordinates && <em> — preview</em>}
+                        {previewCoordinates && <em> — {t.mapPreview ?? 'preview'}</em>}
                     </small>
                 )}
             </div>
@@ -218,9 +239,9 @@ export default function ContactMap({ location, previewCoordinates, onMarkerDrag 
                 <div className={`contacts__map-state contacts__map-state--${mapStatus}`}>
                     {mapStatus === 'loading' && <span className="contacts__map-loader" aria-hidden="true" />}
                     <p>
-                        {mapStatus === 'loading' && 'Finding this address on the map...'}
+                        {mapStatus === 'loading' && (t.mapLoading ?? 'Finding this address on the map...')}
                         {mapStatus === 'error' && mapError}
-                        {mapStatus === 'empty' && 'Add a location to display this contact on the map.'}
+                        {mapStatus === 'empty' && (t.mapEmpty ?? 'Add a location to display this contact on the map.')}
                     </p>
                 </div>
             )}

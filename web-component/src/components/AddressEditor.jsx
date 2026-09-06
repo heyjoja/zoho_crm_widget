@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useLanguage } from '../language/LanguageContext.jsx'
 
 const postalCodeCache = new Map()
 const addressSuggestionCache = new Map()
@@ -145,12 +146,16 @@ export default function AddressEditor({
     onEditingChange,
     draggedCoordinates,
 }) {
+    const { t } = useLanguage()
+
     const [isEditing, setIsEditing] = useState(false)
     const [draft, setDraft] = useState(() => createDraft(address))
     const [lookupStatus, setLookupStatus] = useState('idle')
     const [lookupMessage, setLookupMessage] = useState('')
     const reverseDebouncerRef = useRef(null)
     const abortControllerRef = useRef(null)
+    // Keeps the last resolved coordinates so they can be attached to the onSave payload
+    const resolvedCoordsRef = useRef(null)
 
     // Search is only available for US and CA
     const isSupportedCountry = draft.countryCode === 'US' || draft.countryCode === 'CA'
@@ -162,6 +167,7 @@ export default function AddressEditor({
         setIsEditing(false)
         setLookupStatus('idle')
         setLookupMessage('')
+        resolvedCoordsRef.current = null
     }, [contactId])
 
     useEffect(() => {
@@ -169,11 +175,11 @@ export default function AddressEditor({
         clearTimeout(reverseDebouncerRef.current)
         reverseDebouncerRef.current = setTimeout(async () => {
             setLookupStatus('loading')
-            setLookupMessage('Detecting address from pin position...')
+            setLookupMessage(t.addrDetectingPin ?? 'Detecting address from pin position...')
             try {
                 const result = await reverseGeocode(draggedCoordinates)
                 const extracted = extractAddressFromNominatim(result)
-                if (!extracted) throw new Error('No address found at this location.')
+                if (!extracted) throw new Error(t.addrNoAddressAtLocation ?? 'No address found at this location.')
                 // Always replace all fields with what the marker found — no fallback to old values
                 setDraft((current) => ({
                     ...current,
@@ -184,11 +190,13 @@ export default function AddressEditor({
                     country: extracted.country,
                     countryCode: extracted.countryCode,
                 }))
+                // Store the dragged coordinates so they are included in the onSave payload
+                resolvedCoordsRef.current = draggedCoordinates
                 setLookupStatus('success')
-                setLookupMessage('Address updated from pin position.')
+                setLookupMessage(t.addrUpdatedFromPin ?? 'Address updated from pin position.')
             } catch {
                 setLookupStatus('error')
-                setLookupMessage('Could not detect address at this location.')
+                setLookupMessage(t.addrCouldNotDetect ?? 'Could not detect address at this location.')
             }
         }, 600)
         return () => clearTimeout(reverseDebouncerRef.current)
@@ -218,7 +226,7 @@ export default function AddressEditor({
 
         if (!trimmedPostal) {
             setLookupStatus('error')
-            setLookupMessage('Please enter a postal code first.')
+            setLookupMessage(t.addrEnterPostalFirst ?? 'Please enter a postal code first.')
             return
         }
 
@@ -226,7 +234,7 @@ export default function AddressEditor({
         abortControllerRef.current = new AbortController()
 
         setLookupStatus('loading')
-        setLookupMessage('Looking up postal code...')
+        setLookupMessage(t.addrLookingUp ?? 'Looking up postal code...')
 
         try {
             const lookupPromises = [
@@ -256,7 +264,7 @@ export default function AddressEditor({
             const osmAddress = nominatimData[0]?.address ?? {}
 
             if (!place && !nominatimData.length) {
-                throw new Error('Postal code not found. Please fill in the address manually.')
+                throw new Error(t.addrPostalNotFound ?? 'Postal code not found. Please fill in the address manually.')
             }
 
             const previewCoords = nominatimData[0]
@@ -281,14 +289,14 @@ export default function AddressEditor({
             }))
 
             setLookupStatus('success')
-            setLookupMessage('Address details filled in.')
+            setLookupMessage(t.addrDetailsFilled ?? 'Address details filled in.')
         } catch (err) {
             if (!abortControllerRef.current?.signal.aborted) {
                 setLookupStatus('error')
                 setLookupMessage(err.message ?? 'Lookup failed.')
             }
         }
-    }, [draft, isSupportedCountry, onPreviewLocation])
+    }, [draft, isSupportedCountry, onPreviewLocation, t])
 
     const handleSave = () => {
         onSave?.({ ...draft })
@@ -314,14 +322,14 @@ export default function AddressEditor({
         ].filter(Boolean)
         return (
             <div className="contacts__detail-field">
-                <dt>Address</dt>
+                <dt>{t.addrTitle ?? 'Address'}</dt>
                 <dd>
                     <div className="contacts__field-value">
                         <span>{displayParts.join(', ') || '—'}</span>
                         <button
                             className="contacts__field-edit"
                             type="button"
-                            aria-label="Edit address"
+                            aria-label={t.addrEdit ?? 'Edit address'}
                             onClick={() => setIsEditing(true)}
                         >
                             <PencilIcon />
@@ -334,7 +342,7 @@ export default function AddressEditor({
 
     return (
         <div className="contacts__detail-field contacts__detail-field--editing">
-            <dt>Address</dt>
+            <dt>{t.addrTitle ?? 'Address'}</dt>
             <dd>
                 {isEditing && (
                     <form className="address-editor__form" onSubmit={(e) => e.preventDefault()}>
@@ -342,26 +350,26 @@ export default function AddressEditor({
                         {/* ── Postal Code + Country + Search button (TOP of form) ── */}
                         <div className="address-editor__row address-editor__row--inline">
                             <div className="address-editor__field address-editor__field--postal">
-                                <label htmlFor="postalCode">Postal Code</label>
+                                <label htmlFor="postalCode">{t.addrPostalCode ?? 'Postal Code'}</label>
                                 <input
                                     id="postalCode"
                                     type="text"
                                     value={draft.postalCode}
                                     onChange={(e) => updateDraft('postalCode', e.target.value)}
-                                    placeholder="Postal code"
+                                    placeholder={t.addrPostalCode ?? 'Postal code'}
                                 />
                             </div>
 
                             <div className="address-editor__field address-editor__field--country-code">
-                                <label htmlFor="countryCode">Country</label>
+                                <label htmlFor="countryCode">{t.addrCountry ?? 'Country'}</label>
                                 <select
                                     id="countryCode"
                                     value={draft.countryCode}
                                     onChange={(e) => handleCountryCodeChange(e.target.value)}
                                 >
-                                    <option value="US">US</option>
-                                    <option value="CA">CA</option>
-                                    <option value="OTHER">Other</option>
+                                    <option value="US">{t.addrCountryUS ?? 'US'}</option>
+                                    <option value="CA">{t.addrCountryCA ?? 'CA'}</option>
+                                    <option value="OTHER">{t.addrCountryOther ?? 'Other'}</option>
                                 </select>
                             </div>
 
@@ -370,7 +378,7 @@ export default function AddressEditor({
                                     type="button"
                                     className="address-editor__search-btn"
                                     onClick={performLookup}
-                                    aria-label="Search postal code"
+                                    aria-label={t.addrLookupPostal ?? 'Search postal code'}
                                     disabled={lookupStatus === 'loading'}
                                 >
                                     <SearchIcon />
@@ -387,58 +395,58 @@ export default function AddressEditor({
 
                         {/* ── Rest of the address fields ── */}
                         <div className="address-editor__field">
-                            <label htmlFor="streetAddress">Street Address</label>
+                            <label htmlFor="streetAddress">{t.addrStreet ?? 'Street Address'}</label>
                             <input
                                 id="streetAddress"
                                 type="text"
                                 value={draft.streetAddress}
                                 onChange={(e) => updateDraft('streetAddress', e.target.value)}
-                                placeholder="Street address"
+                                placeholder={t.addrStreet ?? 'Street address'}
                             />
                         </div>
 
                         <div className="address-editor__row address-editor__row--inline">
                             <div className="address-editor__field">
-                                <label htmlFor="city">City</label>
+                                <label htmlFor="city">{t.addrCity ?? 'City'}</label>
                                 <input
                                     id="city"
                                     type="text"
                                     value={draft.city}
                                     onChange={(e) => updateDraft('city', e.target.value)}
-                                    placeholder="City"
+                                    placeholder={t.addrCity ?? 'City'}
                                 />
                             </div>
 
                             <div className="address-editor__field">
-                                <label htmlFor="provinceState">State / Province</label>
+                                <label htmlFor="provinceState">{t.addrProvinceState ?? 'State / Province'}</label>
                                 <input
                                     id="provinceState"
                                     type="text"
                                     value={draft.provinceState}
                                     onChange={(e) => updateDraft('provinceState', e.target.value)}
-                                    placeholder="State / Province"
+                                    placeholder={t.addrProvinceState ?? 'State / Province'}
                                 />
                             </div>
                         </div>
 
                         <div className="address-editor__field">
-                            <label htmlFor="country">Country Name</label>
+                            <label htmlFor="country">{t.addrCountryName ?? 'Country Name'}</label>
                             <input
                                 id="country"
                                 type="text"
                                 value={draft.country}
                                 onChange={(e) => updateDraft('country', e.target.value)}
-                                placeholder="Country name"
+                                placeholder={t.addrCountryName ?? 'Country name'}
                             />
                         </div>
 
                         {/* ── Form actions ── */}
                         <div className="address-editor__actions">
                             <button type="button" className="address-editor__btn address-editor__btn--save" onClick={handleSave}>
-                                <SaveIcon /> Save
+                                <SaveIcon /> {t.addrSave ?? 'Save'}
                             </button>
                             <button type="button" className="address-editor__btn address-editor__btn--cancel" onClick={handleCancel}>
-                                <CancelIcon /> Cancel
+                                <CancelIcon /> {t.cancel ?? 'Cancel'}
                             </button>
                         </div>
                     </form>

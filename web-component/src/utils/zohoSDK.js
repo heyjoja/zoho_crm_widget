@@ -1,4 +1,3 @@
-
 import { getZohoSDK } from '../context/ZohoContext.jsx'
 
 /**
@@ -57,17 +56,9 @@ const resolveOrgId = () => {
 
 /**
  * Builds the full Zoho CRM image URL from a raw Record_Image hash.
- *
- * Zoho returns only the file hash in Record_Image, e.g.:
- *   "28ac36384e75b5110d94908681f34caa..."
- *
- * The loadable URL format is:
- *   https://crm.zoho.com/crm/org{ORG_ID}/EntityImageAttach.do
- *     ?action_module=Contacts&entityId={RECORD_ID}&actionName=readImage&fileId={HASH}
- *
- * @param {string|null} imageHash  - raw value from Record_Image field
- * @param {string}      recordId   - the record's Zoho entity ID (used as entityId)
- * @param {string}      orgId      - CRM org ID
+ * @param {string|null} imageHash
+ * @param {string}      recordId
+ * @param {string}      orgId
  * @returns {string|null}
  */
 const buildImageUrl = (imageHash, recordId, orgId) => {
@@ -89,22 +80,12 @@ const buildImageUrl = (imageHash, recordId, orgId) => {
  */
 const mapRecord = (record, orgId) => ({
   id: record.id,
-
-  // Human-readable sequential ID (custom field — must be requested explicitly)
   qid: record.QID ?? null,
-
-  // Profile image: built from the file hash + record ID + org ID
   recordImage: buildImageUrl(record.Record_Image, record.id, orgId),
-
-  // Name
   firstName: record.First_Name ?? '',
   lastName: record.Last_Name ?? '',
-
-  // Contact info
   phone: record.Phone ?? '',
   email: record.Email ?? '',
-
-  // Address parts — used by AddressEditor
   streetAddress: [
     record.Mailing_Flat_House_No_Building_Apartment_Name ?? '',
     record.Mailing_Street ?? '',
@@ -113,12 +94,8 @@ const mapRecord = (record, orgId) => ({
   provinceState: record.Mailing_State ?? '',
   postalCode: record.Mailing_Zip ?? '',
   country: record.Mailing_Country ?? '',
-
-  // Coordinates
   coordinatesLng: record.Mailing_Longitude ?? null,
   coordinatesLat: record.Mailing_Latitude ?? null,
-
-  // Computed display string for the Location column and map
   location: [
     record.Mailing_Flat_House_No_Building_Apartment_Name,
     record.Mailing_Street,
@@ -219,4 +196,139 @@ export async function searchContacts(searchTerm) {
   }
 
   return mapped
+}
+
+/**
+ * Fetches a single Zoho CRM contact by record ID.
+ * @param {string} contactId
+ * @returns {Promise<Object>}
+ */
+ export async function getContact(contactId) {
+  const ZOHO = getZohoSDK()
+
+  if (!ZOHO) {
+    throw new Error('Zoho SDK is not available.')
+  }
+
+  const orgId = resolveOrgId()
+
+  const response = await ZOHO.CRM.API.getRecord({
+    Entity: 'Contacts',
+    RecordID: contactId,
+    fields: CONTACT_FIELDS,
+  })
+
+  console.group(`[zohoSDK] getContact("${contactId}") — raw response`)
+  console.log('orgId resolved:', orgId)
+  console.log('Full response object:', response)
+  console.groupEnd()
+
+  const record = response?.data?.[0]
+  if (!record) {
+    throw new Error(`[zohoSDK] getContact: no record returned for id "${contactId}"`)
+  }
+
+  return mapRecord(record, orgId)
+ }
+
+ /**
+ * Updates a contact record in Zoho CRM.
+ * Uses the same ZOHO.CRM SDK instance — no extra API keys required.
+ *
+ * @param {string} contactId - The Zoho CRM record ID of the contact.
+ * @param {Object} fields - The fields to update, e.g. { First_Name: 'John', Last_Name: 'Doe' }
+ * @returns {Promise<Object>} - The API response from Zoho CRM.
+ */
+export async function updateContact(contactId, fields) {
+  const ZOHO = getZohoSDK()
+
+  if (!ZOHO) {
+    throw new Error('[Zoho] SDK not available. Cannot update contact.')
+  }
+
+  const response = await ZOHO.CRM.API.updateRecord({
+    Entity: 'Contacts',
+    APIData: {
+      id: contactId,
+      ...fields,
+    },
+    Trigger: [], // Set to ['workflow'] if you want to trigger Zoho workflows
+  })
+
+  // Zoho SDK wraps the result in response.data[0]
+  const result = response?.data?.[0]
+
+  if (result?.status === 'error' || result?.code !== 'SUCCESS') {
+    throw new Error(
+      `[Zoho] Failed to update contact: ${result?.message || JSON.stringify(result)}`
+    )
+  }
+
+  return result
+}
+
+/**
+ * Creates a new contact record in Zoho CRM.
+ *
+ * @param {Object} contactData - Internal contact model fields.
+ * @param {string} contactData.firstName
+ * @param {string} contactData.lastName
+ * @param {string} [contactData.phone]
+ * @param {string} [contactData.email]
+ * @param {string} [contactData.streetAddress]   - maps to Mailing_Street
+ * @param {string} [contactData.flatHouseNo]     - maps to Mailing_Flat_House_No_Building_Apartment_Name
+ * @param {string} [contactData.city]
+ * @param {string} [contactData.provinceState]
+ * @param {string} [contactData.postalCode]
+ * @param {string} [contactData.country]
+ * @param {number} [contactData.coordinatesLng]
+ * @param {number} [contactData.coordinatesLat]
+ * @returns {Promise<Object>} - The API response result from Zoho CRM.
+ */
+export async function createContact(contactData) {
+  const ZOHO = getZohoSDK()
+
+  if (!ZOHO) {
+    throw new Error('[Zoho] SDK not available. Cannot create contact.')
+  }
+
+  const APIData = {
+    First_Name: contactData.firstName ?? '',
+    Last_Name: contactData.lastName ?? '',
+    ...(contactData.phone     && { Phone: contactData.phone }),
+    ...(contactData.email     && { Email: contactData.email }),
+    ...(contactData.flatHouseNo   && { Mailing_Flat_House_No_Building_Apartment_Name: contactData.flatHouseNo }),
+    ...(contactData.streetAddress && { Mailing_Street: contactData.streetAddress }),
+    ...(contactData.city          && { Mailing_City: contactData.city }),
+    ...(contactData.provinceState && { Mailing_State: contactData.provinceState }),
+    ...(contactData.postalCode    && { Mailing_Zip: contactData.postalCode }),
+    ...(contactData.country       && { Mailing_Country: contactData.country }),
+    ...(contactData.coordinatesLng != null && { Mailing_Longitude: contactData.coordinatesLng }),
+    ...(contactData.coordinatesLat != null && { Mailing_Latitude: contactData.coordinatesLat }),
+  }
+
+  console.group('[zohoSDK] createContact — payload')
+  console.log('APIData:', APIData)
+  console.groupEnd()
+
+  const response = await ZOHO.CRM.API.insertRecord({
+    Entity: 'Contacts',
+    APIData,
+    Trigger: [],
+  })
+
+  console.group('[zohoSDK] createContact — raw response')
+  console.log('Full response object:', response)
+  console.groupEnd()
+
+  // Zoho SDK wraps the result in response.data[0]
+  const result = response?.data?.[0]
+
+  if (result?.status === 'error' || result?.code !== 'SUCCESS') {
+    throw new Error(
+      `[Zoho] Failed to create contact: ${result?.message || JSON.stringify(result)}`
+    )
+  }
+
+  return result
 }
